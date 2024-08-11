@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/adamthiede/bootdev-rss/internal/database"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"net/http"
@@ -13,34 +15,44 @@ type statusResponse struct {
 	Status string `json:"status"`
 }
 
+type apiConfig struct {
+	DB *database.Queries
+}
+
 func main() {
+	// load env
 	godotenv.Load()
 	port := os.Getenv("PORT")
 	addr := os.Getenv("ADDR")
+	dbconn := os.Getenv("DBCONN")
+	// set up server listening
 	if addr == "" {
 		addr = "127.0.0.1"
 	}
 	listenOn := fmt.Sprintf("%s:%s", addr, port)
 	fmt.Printf("Listening on %s\n", listenOn)
+	fmt.Printf("Connecting to %s\n", dbconn)
+	// connect to database
+	db, dberr := sql.Open("postgres", dbconn)
+	if dberr != nil {
+		fmt.Printf("cannot connect to database:\n%s\n%s\n", dbconn, dberr)
+		os.Exit(1)
+	}
+	dbQueries := database.New(db)
+	apiCfg := apiConfig{
+		DB: dbQueries,
+	}
 
 	smux := http.NewServeMux()
 
 	// healthz
-	healthzHandler := func(w http.ResponseWriter, r *http.Request) {
-		response := statusResponse{
-			Status: "ok",
-		}
-		respondWithJSON(w, http.StatusOK, response)
-	}
 	smux.HandleFunc("GET /v1/healthz", healthzHandler)
-
 	// error
-	errHandler := func(w http.ResponseWriter, r *http.Request) {
-		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
-	}
 	smux.HandleFunc("GET /v1/err", errHandler)
+	// create user
+	smux.HandleFunc("POST /v1/users", createUserHandler)
 
-	// run http server after every handler is added
+	//run http server after every handler is added
 	server := http.Server{
 		Handler: smux,
 		Addr:    listenOn,
@@ -49,26 +61,4 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	dat, err := json.Marshal(payload)
-	if err != nil {
-		fmt.Printf("Error marshalling JSON: %s\n", err)
-		w.WriteHeader(500)
-		return
-	}
-	w.WriteHeader(code)
-	w.Write(dat)
-}
-
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	fmt.Printf("responding with %v: %s\n", code, msg)
-	type errResp struct {
-		Error string `json:"error"`
-	}
-	respondWithJSON(w, code, errResp{
-		Error: msg,
-	})
 }
