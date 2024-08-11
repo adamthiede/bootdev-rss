@@ -1,10 +1,10 @@
 package main
 
 import (
-	"time"
+	"fmt"
 	"github.com/adamthiede/bootdev-rss/internal/database"
 	"github.com/google/uuid"
-	"fmt"
+	"time"
 )
 
 type User struct {
