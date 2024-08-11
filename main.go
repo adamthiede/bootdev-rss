@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"github.com/adamthiede/bootdev-rss/internal/database"
 	"github.com/joho/godotenv"
@@ -42,6 +41,7 @@ func main() {
 	apiCfg := apiConfig{
 		DB: dbQueries,
 	}
+	fmt.Printf("%s\n", apiCfg.DB)
 
 	smux := http.NewServeMux()
 

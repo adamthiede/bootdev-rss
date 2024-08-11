@@ -24,12 +24,9 @@ func createUserHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&newUser)
 	if err != nil {
 		fmt.Printf("Error decoding parameters: %s\n", err)
-		w.WriteHeader(500)
 		respondWithError(w, http.StatusBadRequest, "Error decoding parameters")
 	}
-	w.WriteHeader(201)
 
-	apiCfg.DB.CreateUser()
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
