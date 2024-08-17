@@ -33,6 +33,7 @@ func (apiCfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Reques
 		respondWithError(w, http.StatusBadRequest, "Error decoding parameters")
 		return
 	}
+	//api_key := "data"
 	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		ID:        uuid.New().String(),
 		CreatedAt: time.Now().UTC(),
@@ -46,7 +47,7 @@ func (apiCfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJSON(w, 200, user)
+	respondWithJSON(w, 200, databaseUserToUser(user))
 
 }
 
