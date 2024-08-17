@@ -37,9 +37,8 @@ func main() {
 		fmt.Printf("cannot connect to database:\n%s\n%s\n", dbconn, dberr)
 		os.Exit(1)
 	}
-	dbQueries := database.New(db)
 	apiCfg := apiConfig{
-		DB: dbQueries,
+		DB: database.New(db),
 	}
 	fmt.Printf("%s\n", apiCfg.DB)
 
@@ -50,7 +49,7 @@ func main() {
 	// error
 	smux.HandleFunc("GET /v1/err", errHandler)
 	// create user
-	smux.HandleFunc("POST /v1/users", createUserHandler)
+	smux.HandleFunc("POST /v1/users", apiCfg.createUserHandler)
 
 	//run http server after every handler is added
 	server := http.Server{
